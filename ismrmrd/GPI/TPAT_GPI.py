@@ -8,7 +8,7 @@
 
 import gpi
 import ismrmrd.xsd
-from ismrmrdtools import coils,  sense, transform
+from ismrmrdtools import coils,  sense, transform, grappa
 import numpy as np
 
 class ExternalNode(gpi.NodeAPI):
@@ -17,7 +17,7 @@ class ExternalNode(gpi.NodeAPI):
 
     def initUI(self):
         # Widgets
-        self.addWidget('PushButton', 'MyPushButton', toggle=True)
+        self.addWidget('ExclusiveRadioButtons', 'Parallel Imaging Method', buttons=['GRAPPA', 'SENSE'], val=0)
 
         # IO Ports
         self.addInPort('data', 'NPYarray')
@@ -50,13 +50,14 @@ class ExternalNode(gpi.NodeAPI):
         
         if acc_factor > 1:
             coil_data = np.squeeze(np.mean(all_data,0))
-
-            #For some reason the svd in the GRAPPA calculation is segfaulting when called within this node.
-            #We will only allo SENSE for now
-            #(unmix,gmap) = calculate_grappa_unmixing(coil_data, acc_factor,csm=csm)
-
-            (unmix,gmap) = sense.calculate_sense_unmixing(acc_factor,csm)
             
+            if self.getVal('Parallel Imaging Method') == 0:
+                (unmix,gmap) = grappa.calculate_grappa_unmixing(coil_data, acc_factor,csm=csm)
+            elif self.getVal('Parallel Imaging Method') == 1:
+                (unmix,gmap) = sense.calculate_sense_unmixing(acc_factor,csm)
+            else:
+                raise Exception('Unknown parallel imaging method')
+
         recon = np.zeros((all_data.shape[-4],all_data.shape[-2],all_data.shape[-1]), dtype=np.complex64)
         
         for r in range(0,all_data.shape[-4]):
