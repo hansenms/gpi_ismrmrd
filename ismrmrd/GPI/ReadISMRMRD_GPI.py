@@ -17,7 +17,19 @@ class ExternalNode(gpi.NodeAPI):
     '''This node is used to read ISMRMRD format and convert to a simple NPY array
     '''
 
+    def execType(self):
+        # skip execType recursion by getting val from widget directly
+        op = self.getWidget('Execution Type').get_val()
+        if op == 0:
+            return gpi.GPI_THREAD
+        if op == 1:
+            return gpi.GPI_PROCESS
+        if op == 2:
+            return gpi.GPI_APPLOOP
+                                                                        
     def initUI(self):
+        self.procType = gpi.GPI_PROCESS
+        
         # Widgets
         self.addWidget('OpenFileBrowser', 'File Browser',
                        button_title='Browse', caption='Open File', directory='~/',
@@ -28,6 +40,10 @@ class ExternalNode(gpi.NodeAPI):
         self.addWidget('PushButton', 'Zeropad', button_title='Zeropad (partial Fourier)', toggle=True, val=True)
         self.addWidget('PushButton', 'Noise Adjust', button_title='Noise Adjust (prewhitening)', toggle=True, val=True)
         self.addWidget('DoubleSpinBox', 'Receiver Noise BW Ratio', val=0.79, decimals=3, label='Receiver Noise BW Ratio')
+
+        self.addWidget('ExclusiveRadioButtons', 'Execution Type',
+                       buttons=['Thread', 'Process', 'Main Loop'],
+                       val=1, collapsed=True)
 
         # IO Ports
 

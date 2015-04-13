@@ -15,10 +15,25 @@ class ExternalNode(gpi.NodeAPI):
     '''Simple Node for doing TSENSE or TGRAPPA
     '''
 
+    def execType(self):
+        # skip execType recursion by getting val from widget directly
+        op = self.getWidget('Execution Type').get_val()
+        if op == 0:
+            return gpi.GPI_THREAD
+        if op == 1:
+            return gpi.GPI_PROCESS
+        if op == 2:
+            return gpi.GPI_APPLOOP
+                                                                        
     def initUI(self):
+        self.procType = gpi.GPI_PROCESS
+        
         # Widgets
         self.addWidget('ExclusiveRadioButtons', 'Parallel Imaging Method', buttons=['GRAPPA', 'SENSE'], val=0)
 
+        self.addWidget('ExclusiveRadioButtons', 'Execution Type',
+                       buttons=['Thread', 'Process', 'Main Loop'],
+                       val=1, collapsed=True)
         # IO Ports
         self.addInPort('data', 'NPYarray')
         self.addInPort('ISMRMRDHeader', 'STRING')
